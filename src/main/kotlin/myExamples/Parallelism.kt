@@ -5,51 +5,58 @@ import kotlin.system.measureTimeMillis
 
 fun main() {
     runBlocking {
+        asyncMethods()
         awaitAllMethods()
         noWaitMethods()
-        asyncMethods()
     }
 }
 
 suspend fun noWaitMethods() = coroutineScope {
+    var one = 0
+    var two = 0
     val time = measureTimeMillis {
-        touchDatabaseOne()
-        touchDatabaseTwo()
+        one = touchDatabaseOne()
+        two = touchDatabaseTwo()
     }
-    println("---> completed two actions in $time ms not waiting")
+    showResult(time, one+two, "NO WAITING")
 }
 
 suspend fun asyncMethods() = coroutineScope {
+    var total = 0
     val time = measureTimeMillis {
         val a = async { touchDatabaseOne() }
         val b = async { touchDatabaseTwo() }
-        val total = a.await() + b.await()
+        total = a.await() + b.await()
     }
-    println("---> completed two actions in $time ms WITH ASYNC")
+    showResult(time, total, "ASYNC")
 }
 
 suspend fun awaitAllMethods() = coroutineScope {
+    var one = 0
+    var two = 0
     val time = measureTimeMillis {
         awaitAll(
             async {
-                touchDatabaseOne()
+                one = touchDatabaseOne()
             },
             async {
-                touchDatabaseTwo()
+                two = touchDatabaseTwo()
             }
         )
     }
-    println("---> completed two actions in $time ms using AWAITALL")
+    showResult(time, one+two, "AWAITALL")
+}
+
+fun showResult(time: Long, total: Int, method: String) {
+    println("---> Completed two actions, with total value $total, in ${time}ms using: $method")
 }
 
 suspend fun touchDatabaseOne() : Int {
     delay(4500L)
-    println("finish touchDatabaseOne")
     return 1000
 }
 
 suspend fun touchDatabaseTwo() : Int {
     delay(3000L)
-    println("finish touchDatabaseTwo")
     return 2000
 }
